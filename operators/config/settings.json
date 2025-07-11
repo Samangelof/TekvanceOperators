@@ -1,0 +1,26 @@
+{
+  "proxy": null,
+  "timeout": 10,
+  "robot_knp": {
+    "login": "example",
+    "password": "123"
+  },
+  "wb_scrapper": {
+    "categories": ["electronics", "books"]
+  }
+}
+
+
+
+// чтение
+// # common/config.py
+// import json
+// import os
+
+// with open(os.path.join("config", "settings.json"), encoding="utf-8") as f:
+//     CONFIG = json.load(f)
+
+
+// вызов
+// from common.config import CONFIG
+// login = CONFIG["robot_knp"]["login"]
