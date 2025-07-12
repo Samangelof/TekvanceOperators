@@ -6,16 +6,18 @@ from PySide6.QtWidgets import (
     QLineEdit, QPushButton, QLabel, QFormLayout
 )
 import asyncio
-import logging
 from qasync import asyncSlot
 from PySide6.QtCore import Qt
-from gui.auth.styles import FORM_STYLE, BUTTON_STYLE, ERROR_STYLE
+from common.logger import get_logger
+from gui.modules.auth.styles import FORM_STYLE, BUTTON_STYLE, ERROR_STYLE
 
-from operators.common.system_info import get_mac_address, get_machine_name
-from operators.common.api_service import api_service
+from common.system_info import get_mac_address, get_machine_name
+from common.api_service import api_service
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger("auth")
+
+
 
 class AuthWindow(QMainWindow):
     """Окно авторизации пользователя"""
@@ -88,7 +90,7 @@ class AuthWindow(QMainWindow):
         self.password_input.returnPressed.connect(self.on_login)
     
     @asyncSlot()
-    def on_login(self):
+    async def on_login(self):
         """Обработка нажатия кнопки Войти"""
         login = self.login_input.text()
         password = self.password_input.text()
@@ -107,11 +109,12 @@ class AuthWindow(QMainWindow):
         # self.error_label.setVisible(False)
         
         # Запускаем асинхронную проверку
-        asyncio.ensure_future(self.perform_login(login, password))
+        await self.perform_login(login, password)
+
     
     async def perform_login(self, login: str, password: str):
         """Выполняет асинхронную проверку логина и пароля"""
-        print(f'[perform_login] Запускаем проверку для {login}')
+        logger.debug(f'[perform_login] Запускаем проверку для {login}')
         try:
             success, data = await api_service.login(login, password)
             unique_id = data.get('unique_id')
@@ -119,7 +122,7 @@ class AuthWindow(QMainWindow):
             machine_name = get_machine_name()
 
             if success:
-                print(f"Успешная аутентификация: {login}")
+                logger.success(f"Успешная аутентификация: {login}")
                 
                 verified = await api_service.verify_machine(
                     unique_id,
@@ -128,9 +131,9 @@ class AuthWindow(QMainWindow):
                     success
                 )
                 if verified:
-                    print("Машина успешно верифицирована")
+                    logger.success("Машина успешно верифицирована")
                 else:
-                    print("Ошибка верификации машины")
+                    logger.error("Ошибка верификации машины")
                 
                 self.close()
                 # TODO: Здесь код для открытия основного окна приложения
@@ -138,6 +141,7 @@ class AuthWindow(QMainWindow):
                 # self.main_window.show()
             else:
                 error_msg = data.get("error", "Неверный логин или пароль")
+                logger.error(f"Ошибка аутентификации: {error_msg}")
                 # self.show_error(error_msg)
         except Exception as e:
             logger.error(f"Ошибка при авторизации: {e}", exc_info=True)

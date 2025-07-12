@@ -1,0 +1,2 @@
+pyside6-uic gui/views/auth.ui -o gui/ui_auth.py
+pyside6-uic gui/views/dashboard.ui -o gui/ui_dashboard.py

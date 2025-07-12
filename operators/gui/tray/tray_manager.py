@@ -7,7 +7,7 @@ from PySide6.QtGui import QIcon, QAction
 from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QApplication
 
-from gui.auth.auth_window import AuthWindow
+from gui.modules.auth.auth_window import AuthWindow
 
 
 # Важный аспект который нужно учитывать:
@@ -29,7 +29,7 @@ class TrayManager:
         self.auth_window = AuthWindow() if with_auth else None
 
         self.tray_icon = QSystemTrayIcon()
-        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "resources", "icon.png")
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "gui/resources", "icon.png")
 
         if not os.path.exists(icon_path):
             print("[TrayManager] icon.png not found, using fallback icon")

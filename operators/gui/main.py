@@ -3,25 +3,16 @@
 
 import sys
 import asyncio
-import logging
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QEventLoop
+from PySide6.QtCore import QEventLoop, QTimer
 # from gui.auth.auth_window import AuthWindow
-from operators.common.api_service import api_service
+from common.logger import get_logger
+from common.api_service import api_service
 from gui.tray.tray_manager import TrayManager
-from qasync import QEventLoop, asyncSlot
+from qasync import QEventLoop
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler('app.log')
-    ]
-)
-
-logger = logging.getLogger(__name__)
+logger = get_logger("main")
 
 # -- Для интеграции asyncio с Qt --
 class QEventLoopPolicy(asyncio.AbstractEventLoopPolicy):
@@ -51,20 +42,23 @@ def run_gui():
 
         tray_manager = TrayManager()
 
-        async def on_exit():
-            await api_service.close()
-
-        app.aboutToQuit.connect(lambda: loop.create_task(on_exit()))
 
         # Настройка asyncio для работы с Qt
         with loop:
-            exit_code = app.exec()
-
-    
+            loop.run_forever()
+        
+        
         # -- см. TrayManager --
         # auth_window = AuthWindow()
         # auth_window.show()
         # ---------------------
+
+        # Запуск главного цикла приложения
+        exit_code = app.exec()
+        
+        # Закрытие API-сессии перед выходом
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(api_service.close())
         
         sys.exit(exit_code)
         

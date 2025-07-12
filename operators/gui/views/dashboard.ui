@@ -1,0 +1,14 @@
+<!-- TODO: Rebuild Auth UI via Qt Designer -->
+<ui version="4.0">
+ <class>AuthWindow</class>
+ <widget class="QWidget" name="AuthWindow">
+  <property name="windowTitle">
+   <string>Авторизация</string>
+  </property>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
+
+
+
