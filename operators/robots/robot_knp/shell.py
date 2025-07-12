@@ -1,2 +1,10 @@
+# robots/robot_knp/shell.py
+from robots.robot_knp.brain import KnpRobot
+
+
 def run(config=None):
-    print('Running robot_knp')
+    bot = KnpRobot(config=config or {})
+    try:
+        bot.run()
+    finally:
+        bot.close()

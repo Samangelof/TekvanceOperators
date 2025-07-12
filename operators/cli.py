@@ -1,7 +1,9 @@
-def run_cli():
-    from robots.registry import REGISTRY
-    import sys
+import sys
+import asyncio
+from robots.registry import REGISTRY
 
+
+async def run_cli():
     if len(sys.argv) < 2:
         print("Укажи имя робота")
         return
@@ -11,4 +13,10 @@ def run_cli():
         print(f"Робот '{name}' не найден или повреждён.")
         return
 
-    REGISTRY[name]()
+    result = REGISTRY[name]()
+    if asyncio.iscoroutine(result):
+        await result
+
+
+if __name__ == "__main__":
+    asyncio.run(run_cli())
