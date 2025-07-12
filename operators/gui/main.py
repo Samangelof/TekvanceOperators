@@ -4,15 +4,21 @@
 import sys
 import asyncio
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QEventLoop, QTimer
-# from gui.auth.auth_window import AuthWindow
+from PySide6.QtCore import QEventLoop
+from dotenv import load_dotenv
+import os
 from common.logger import get_logger
+from qasync import QEventLoop
 from common.api_service import api_service
 from gui.tray.tray_manager import TrayManager
-from qasync import QEventLoop
+from gui.modules.dashboard.dashboard_window import DashboardWindow
 
 
 logger = get_logger("main")
+
+load_dotenv()
+MODE = os.getenv("MODE", "PROD")
+
 
 # -- Для интеграции asyncio с Qt --
 class QEventLoopPolicy(asyncio.AbstractEventLoopPolicy):
@@ -40,7 +46,15 @@ def run_gui():
         # # Позволяет продолжать работу при закрытии окон
         # app.setQuitOnLastWindowClosed(False)
 
-        tray_manager = TrayManager()
+        # 
+        # Если нужно, можно отключить авторизацию
+        if MODE == "TEST":
+            logger.warning("Запущен в тестовом режиме. Не рекомендуется использовать в продакшене.")
+            tray_manager = TrayManager(with_auth=False)
+            dashboard = DashboardWindow()
+            dashboard.show()
+        else:
+            tray_manager = TrayManager()
 
 
         # Настройка asyncio для работы с Qt
