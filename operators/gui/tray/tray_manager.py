@@ -18,7 +18,7 @@ from gui.modules.auth.auth_window import AuthWindow
 # self.auth_window = AuthWindow() 
 # self.auth_window.close()
 # -------------------------------
-# Если вызывать и здесь и тут, то будет дублирование окон
+# Если вызывать и здесь и там, то будет дублирование окон
 # -------------------------------
 
 class TrayManager:

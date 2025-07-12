@@ -5,14 +5,12 @@ from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
     QLineEdit, QPushButton, QLabel, QFormLayout
 )
-import asyncio
 from qasync import asyncSlot
 from PySide6.QtCore import Qt
 from common.logger import get_logger
 from gui.modules.auth.styles import FORM_STYLE, BUTTON_STYLE, ERROR_STYLE
-
-from common.system_info import get_mac_address, get_machine_name
-from common.api_service import api_service
+from gui.modules.auth.controller import AuthController
+from gui.modules.dashboard.dashboard_window import DashboardWindow
 
 
 logger = get_logger("auth")
@@ -24,7 +22,8 @@ class AuthWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        
+        self.controller = AuthController()
+
         # Настройка окна
         self.setWindowTitle("Авторизация")
         self.setFixedSize(350, 200)
@@ -113,44 +112,23 @@ class AuthWindow(QMainWindow):
 
     
     async def perform_login(self, login: str, password: str):
-        """Выполняет асинхронную проверку логина и пароля"""
         logger.debug(f'[perform_login] Запускаем проверку для {login}')
         try:
-            success, data = await api_service.login(login, password)
-            unique_id = data.get('unique_id')
-            mac_address = get_mac_address()
-            machine_name = get_machine_name()
-
-            if success:
-                logger.success(f"Успешная аутентификация: {login}")
-                
-                verified = await api_service.verify_machine(
-                    unique_id,
-                    mac_address,
-                    machine_name,
-                    success
-                )
-                if verified:
-                    logger.success("Машина успешно верифицирована")
-                else:
-                    logger.error("Ошибка верификации машины")
-                
+            ok, msg = await self.controller.login(login, password)
+            if ok:
+                logger.success("Авторизация и верификация успешны")
+                self.main_window = DashboardWindow()
+                self.main_window.show()
                 self.close()
-                # TODO: Здесь код для открытия основного окна приложения
-                # self.main_window = MainWindow()
-                # self.main_window.show()
             else:
-                error_msg = data.get("error", "Неверный логин или пароль")
-                logger.error(f"Ошибка аутентификации: {error_msg}")
-                # self.show_error(error_msg)
+                logger.error(f"Ошибка аутентификации: {msg}")
         except Exception as e:
             logger.error(f"Ошибка при авторизации: {e}", exc_info=True)
-            # self.show_error(f"Ошибка подключения: {str(e)}")
         finally:
             self.login_button.setEnabled(True)
             self.login_button.setText("Войти")
-            
             self.password_input.clear()
+
     
     # def show_error(self, message: str):
     #     """Показывает сообщение об ошибке"""
