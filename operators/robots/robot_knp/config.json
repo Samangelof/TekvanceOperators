@@ -1,6 +1,49 @@
 {
-  "start_url": "https://knp.kgd.gov.kz/signin",
-  "headless": true,
-  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-  "proxy": null
+    "headless": false,
+    "start_url": "https://knp.kgd.gov.kz/",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "proxy": null,
+    "window_size": [1920, 1080],
+    "viewport_size": [1920, 1080],
+    "disable_images": false,
+    "disable_javascript": false,
+    "page_load_timeout": 30,
+    "implicit_wait": 10,
+    "disable_blink_features": [
+        "AutomationControlled"
+    ],
+    "exclude_switches": [
+        "enable-automation",
+        "enable-logging"
+    ],
+    "use_chromium_codecs": true,
+    "disable_extensions": false,
+    "disable_plugins": false,
+    "disable_default_apps": false,
+    "disable_popup_blocking": false,
+    "disable_translate": false,
+    "disable_background_timer_throttling": true,
+    "disable_renderer_backgrounding": true,
+    "disable_backgrounding_occluded_windows": true,
+    "disable_features": [
+        "VizDisplayCompositor",
+        "TranslateUI"
+    ],
+    "prefs": {
+        "profile.default_content_setting_values.notifications": 2,
+        "profile.default_content_settings.popups": 0,
+        "profile.managed_default_content_settings.images": 1,
+        "profile.content_settings.exceptions.automatic_downloads.*.setting": 1,
+        "profile.default_content_setting_values.automatic_downloads": 1,
+        "profile.default_content_setting_values.plugins": 1,
+        "credentials_enable_service": false,
+        "profile.password_manager_enabled": false,
+        "profile.default_content_setting_values.media_stream_mic": 2,
+        "profile.default_content_setting_values.media_stream_camera": 2,
+        "profile.default_content_setting_values.geolocation": 2
+    },
+    "experimental_options": {
+        "excludeSwitches": ["enable-automation"],
+        "useAutomationExtension": false
+    }
 }
