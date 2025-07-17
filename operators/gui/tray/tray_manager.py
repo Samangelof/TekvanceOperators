@@ -8,6 +8,7 @@ from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QApplication
 
 from gui.modules.auth.auth_window import AuthWindow
+from gui.modules.dashboard.dashboard_window import DashboardWindow
 
 
 # Важный аспект который нужно учитывать:
@@ -27,15 +28,13 @@ class TrayManager:
             raise RuntimeError("QApplication must be initialized before TrayManager")
 
         self.auth_window = AuthWindow() if with_auth else None
+        self.dashboard = None
+        self.authorized = False
 
         self.tray_icon = QSystemTrayIcon()
         icon_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "gui/resources", "icon.png")
-
-        if not os.path.exists(icon_path):
-            print("[TrayManager] icon.png not found, using fallback icon")
-            self.tray_icon.setIcon(QIcon.fromTheme("dialog-password"))
-        else:
-            self.tray_icon.setIcon(QIcon(icon_path))
+        self.tray_icon.setIcon(QIcon(icon_path) if os.path.exists(icon_path) else QIcon.fromTheme("dialog-password"))
+        self.tray_icon.setToolTip("Tekvance Agent")
 
         self.tray_menu = QMenu()
         if with_auth:
@@ -54,6 +53,7 @@ class TrayManager:
 
         if with_auth:
             self.show_auth_window()
+            self.auth_window.login_successful.connect(self.on_login_success)
 
     @Slot()
     def show_auth_window(self):
@@ -64,14 +64,39 @@ class TrayManager:
         else:
             self.auth_window.show()
 
+    @Slot()
+    def show_dashboard(self):
+        if self.dashboard is None:
+            self.dashboard = DashboardWindow()
+        if self.dashboard.isVisible():
+            self.dashboard.activateWindow()
+        else:
+            self.dashboard.show()
+
+    @Slot()
+    def on_login_success(self):
+        self.authorized = True
+        if self.auth_window:
+            self.auth_window.close()
+            self.tray_menu.removeAction(self.login_action)
+            self.login_action = None
+        self.show_dashboard()
+
+
+
     @Slot(QSystemTrayIcon.ActivationReason)
     def on_tray_activated(self, reason):
-        if reason == QSystemTrayIcon.DoubleClick and self.auth_window:
-            self.show_auth_window()
+        if reason == QSystemTrayIcon.DoubleClick:
+            if self.authorized:
+                self.show_dashboard()
+            else:
+                self.show_auth_window()
 
     @Slot()
     def quit_app(self):
         self.tray_icon.hide()
         if self.auth_window:
             self.auth_window.close()
+        if self.dashboard:
+            self.dashboard.close()
         QApplication.quit()

@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QPushButton, QLabel, QFormLayout
 )
 from qasync import asyncSlot
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from common.logger import get_logger
 from gui.modules.auth.styles import FORM_STYLE, BUTTON_STYLE, ERROR_STYLE
 from gui.modules.auth.controller import AuthController
@@ -19,6 +19,7 @@ logger = get_logger("auth")
 
 class AuthWindow(QMainWindow):
     """Окно авторизации пользователя"""
+    login_successful = Signal()
     
     def __init__(self):
         super().__init__()
@@ -117,8 +118,13 @@ class AuthWindow(QMainWindow):
             ok, msg = await self.controller.login(login, password)
             if ok:
                 logger.success("Авторизация и верификация успешны")
-                self.main_window = DashboardWindow()
-                self.main_window.show()
+                self.login_successful.emit()
+                #? ---
+                #? login_successful.emit() передаест сигнал в TrayManager об успешной авторизации
+                #? И создаст DashboardWindow
+                #? ---
+                # self.main_window = DashboardWindow()
+                # self.main_window.show()
                 self.close()
             else:
                 logger.error(f"Ошибка аутентификации: {msg}")

@@ -4,11 +4,10 @@
 import sys
 import asyncio
 from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QEventLoop
 from dotenv import load_dotenv
 import os
 from common.logger import get_logger
-from qasync import QEventLoop
+from qasync import QEventLoop, asyncSlot, run
 from common.api_service import api_service
 from gui.tray.tray_manager import TrayManager
 from gui.modules.dashboard.dashboard_window import DashboardWindow
@@ -41,10 +40,11 @@ def run_gui():
     try:
         # Инициализация приложения Qt
         app = QApplication(sys.argv)
+        app.setQuitOnLastWindowClosed(False)
+        
         loop = QEventLoop(app)
         asyncio.set_event_loop(loop)
         # # Позволяет продолжать работу при закрытии окон
-        # app.setQuitOnLastWindowClosed(False)
 
         # 
         # Если нужно, можно отключить авторизацию
