@@ -1,4 +1,4 @@
-# robots/wb_scrapper/shell.py
+# robots/robot_knp/shell.py
 from robots.robot_knp.brain import KnpRobot
 
 

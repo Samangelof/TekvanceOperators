@@ -10,7 +10,6 @@ from common.logger import get_logger
 from qasync import QEventLoop, asyncSlot, run
 from common.api_service import api_service
 from gui.tray.tray_manager import TrayManager
-from gui.modules.dashboard.dashboard_window import DashboardWindow
 
 
 logger = get_logger("main")
@@ -35,6 +34,7 @@ class QEventLoopPolicy(asyncio.AbstractEventLoopPolicy):
     def new_event_loop(self):
         return QEventLoop()
 
+
 def run_gui():
     """Основная функция приложения"""
     try:
@@ -46,15 +46,34 @@ def run_gui():
         asyncio.set_event_loop(loop)
         # # Позволяет продолжать работу при закрытии окон
 
+        api_service.load_tokens()
+        logger.debug(f"Loaded access_token: {api_service.access_token}")
+        logger.debug(f"Loaded refresh_token_value: {api_service.refresh_token_value}")
+
+        async def check_token():
+            if api_service.access_token:
+                logger.debug(f"Check token: using access_token = {api_service.access_token}")
+                try:
+                    resp = await api_service.api_request("GET", "/operators/api/check-auth/")
+                    logger.debug(f"Check token response: {resp}")
+                    return True
+                except Exception as e:
+                    logger.debug(f"Check token failed: {e}")
+                    return False
+            logger.debug("No access_token loaded")
+            return False
+
+
+        token_valid = loop.run_until_complete(check_token())
+        logger.debug(f"token_valid: {token_valid}")
+
         # 
         # Если нужно, можно отключить авторизацию
         if MODE == "TEST":
             logger.warning("Запущен в тестовом режиме. Не рекомендуется использовать в продакшене.")
             tray_manager = TrayManager(with_auth=False)
-            dashboard = DashboardWindow()
-            dashboard.show()
         else:
-            tray_manager = TrayManager()
+            tray_manager = TrayManager(with_auth=not token_valid)
 
 
         # Настройка asyncio для работы с Qt

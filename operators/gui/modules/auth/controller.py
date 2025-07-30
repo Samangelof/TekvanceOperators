@@ -5,7 +5,7 @@ from common.system_info import get_mac_address, get_machine_name
 class AuthController:
     async def login(self, login: str, password: str) -> tuple[bool, str]:
         """Авторизация + верификация машины"""
-        success, data = await api_service.login(login, password)
+        success, data = await api_service.get_jwt_token(login, password)
         if not success:
             return False, data.get("error", "Ошибка авторизации")
 

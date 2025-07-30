@@ -24,10 +24,13 @@ from gui.modules.dashboard.dashboard_window import DashboardWindow
 
 class TrayManager:
     def __init__(self, with_auth=True):
+        print(f"TrayManager(with_auth={with_auth})")
+        
         if not QApplication.instance():
             raise RuntimeError("QApplication must be initialized before TrayManager")
 
         self.auth_window = AuthWindow() if with_auth else None
+        self.dashboard = DashboardWindow() if not with_auth else None
         self.dashboard = None
         self.authorized = False
 
@@ -54,6 +57,8 @@ class TrayManager:
         if with_auth:
             self.show_auth_window()
             self.auth_window.login_successful.connect(self.on_login_success)
+        else:
+            self.show_dashboard()
 
     @Slot()
     def show_auth_window(self):

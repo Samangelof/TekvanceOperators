@@ -31,6 +31,6 @@ def authenticate_operator(login, password):
 
 
 authenticate_operator(
-    "user2", 
-    "nqOSwzSVo_%]"
+    "user1747079261", 
+    "f79gPQfDFgkU0VLs"
 )
