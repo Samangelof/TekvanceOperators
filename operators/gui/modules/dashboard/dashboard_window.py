@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox
 from PySide6.QtCore import Qt
 from robots.registry import REGISTRY
@@ -34,7 +36,16 @@ class DashboardWindow(QMainWindow):
     def run_robot(self):
         name = self.selector.currentText()
         try:
-            REGISTRY[name]()
-            logger.success(f"Робот '{name}' запущен")
+            logger.info(f"Запускаем робота '{name}'")
+
+            config_path = Path(f"operators/robots/{name}/config.json")
+            if not config_path.exists():
+                raise FileNotFoundError(f"Config not found: {config_path}")
+
+            with open(config_path, "r", encoding="utf-8") as f:
+                config = json.load(f)
+
+            REGISTRY[name](config=config)
+            logger.success(f"Робот '{name}' завершил работу")
         except Exception as e:
             logger.error(f"Ошибка при запуске робота '{name}': {e}", exc_info=True)

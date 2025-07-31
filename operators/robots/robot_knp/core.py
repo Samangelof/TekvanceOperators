@@ -14,13 +14,14 @@ class BaseSeleniumRobot(BaseRobot):
         super().__init__(config)
         self.config = config or {}
         self.driver = self._init_driver()
+        print(f"[DEBUG] driver config: {self.config}")
 
     def _init_driver(self):
         options = Options()
         if self.config.get("headless", True):
             options.add_argument("--headless")
         return webdriver.Chrome(options=options)
-    
+
     def open_homepage(self):
         url = self.config["start_url"]
         self.driver.get(url)
@@ -29,11 +30,13 @@ class BaseSeleniumRobot(BaseRobot):
 
     def wait_for_load(self):
         """Ожидание полной загрузки с проверкой состояния"""
-        self.wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+        from selenium.webdriver.support.ui import WebDriverWait
         
-        # Дополнительная проверка на отсутствие загрузчиков
+        wait = WebDriverWait(self.driver, 10)
+        wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+        
         try:
-            self.wait.until_not(EC.presence_of_element_located((By.CSS_SELECTOR, ".loading, .spinner, [data-loading]")))
+            wait.until_not(EC.presence_of_element_located((By.CSS_SELECTOR, ".loading, .spinner, [data-loading]")))
         except:
             pass
         

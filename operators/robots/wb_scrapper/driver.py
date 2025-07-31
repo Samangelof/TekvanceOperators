@@ -1,22 +1,20 @@
-from robots.robot_knp.core import BaseSeleniumRobot
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
 import json
 import os
+from selenium.webdriver.chrome.options import Options
+
+from robots.robot_knp.core import BaseSeleniumRobot
 
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
-print(f"Loading configuration from {CONFIG_PATH}")
+print(f"[DEBUG] loading config from: {CONFIG_PATH}")
 
-class RobotKnpDriver(BaseSeleniumRobot):
-    def __init__(self, *args, **kwargs):
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            config = json.load(f)
-        
-        # Обогащаем конфиг опциями Chrome
+class RobotWbDriver(BaseSeleniumRobot):
+    def __init__(self, config=None, *args, **kwargs):
+        if config is None:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                config = json.load(f)
+
         config['chrome_options'] = self._build_chrome_options(config)
-        
         super().__init__(config=config)
         self._setup_stealth()
 

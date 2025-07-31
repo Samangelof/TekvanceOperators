@@ -1,9 +1,9 @@
 # robots/wb_scrapper/shell.py
-from robots.robot_knp.brain import KnpRobot
+from robots.wb_scrapper.brain import WbRobot
 
 
 def run(config=None):
-    bot = KnpRobot(config=config or {})
+    bot = WbRobot(config=config or {})
     try:
         bot.run()
     finally:

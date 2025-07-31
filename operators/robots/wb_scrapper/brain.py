@@ -1,14 +1,14 @@
 # Логика сценария для wb_scrapper
 from common.logger import get_logger
-from operators.robots.wb_scrapper.driver import RobotKnpDriver
+from operators.robots.wb_scrapper.driver import RobotWbDriver
 
 
-logger = get_logger("robot_knp")
+logger = get_logger("wb_scrapper")
 
 
-class KnpRobot:
+class WbRobot:
     def __init__(self, config: dict):
-        self.driver = RobotKnpDriver(config)
+        self.driver = RobotWbDriver(config)
     
     def run(self):
         try:
