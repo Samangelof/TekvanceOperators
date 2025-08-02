@@ -1,4 +1,3 @@
-
 from common.logger import get_logger
 from operators.robots.robot_knp.driver import RobotKnpDriver
 
@@ -14,6 +13,7 @@ class KnpRobot:
         try:
             self.driver.open_homepage()
             self.driver.wait_for_load()
+            self.driver.switch_language_to_russian()
             logger.info(f"Title: {self.driver.driver.title}")
         except Exception as e:
             logger.error(f"Ошибка в run(): {e}")
