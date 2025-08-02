@@ -26,7 +26,6 @@ class BaseSeleniumRobot(BaseRobot):
     def open_homepage(self):
         url = self.config["start_url"]
         self.driver.get(url)
-        self._random_delay()
         self.wait_for_load()
 
     def wait_for_load(self):

@@ -2,7 +2,7 @@ import json
 import os
 from selenium.webdriver.chrome.options import Options
 
-from robots.robot_knp.core import BaseSeleniumRobot
+from robots.wb_scrapper.core import BaseSeleniumRobot
 
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
