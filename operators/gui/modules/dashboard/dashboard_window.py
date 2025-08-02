@@ -1,8 +1,17 @@
 import json
 from pathlib import Path
-from PySide6.QtWidgets import QMainWindow, QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QMainWindow, 
+    QWidget, 
+    QVBoxLayout, 
+    QLabel, 
+    QPushButton, 
+    QComboBox, 
+    QMessageBox
+)
 from robots.registry import REGISTRY
+from common.utils import check_ncalayer_running
 from common.logger import get_logger
 from gui.components.run_button import RunButton
 
@@ -35,6 +44,10 @@ class DashboardWindow(QMainWindow):
 
     def run_robot(self):
         name = self.selector.currentText()
+        if name == "robot_knp" and not check_ncalayer_running():
+            QMessageBox.warning(self, "Ошибка", "NCALayer не запущен.\nПожалуйста, запустите NCALayer и попробуйте снова.")
+            return
+        
         try:
             logger.info(f"Запускаем робота '{name}'")
 
