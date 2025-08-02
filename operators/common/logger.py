@@ -21,7 +21,11 @@ class ChannelFilter:
     def __call__(self, record):
         return record["extra"].get("channel") == self.channel
 
+_initialized_channels = set()
+
 def get_logger(channel: str):
-    path = _log_path(channel)
-    logger.add(path, level="DEBUG", rotation="1 MB", filter=ChannelFilter(channel))
+    if channel not in _initialized_channels:
+        path = _log_path(channel)
+        logger.add(path, level="DEBUG", rotation="1 MB", filter=ChannelFilter(channel))
+        _initialized_channels.add(channel)
     return logger.bind(channel=channel)
