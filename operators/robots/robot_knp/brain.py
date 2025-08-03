@@ -14,6 +14,9 @@ class KnpRobot:
             self.driver.open_homepage()
             self.driver.wait_for_load()
             self.driver.switch_language_to_russian()
+            self.driver.login_by_cert()
+            self.driver.select_cert_from_dir(self.driver.config.get("eds_folder", ""))
+
             logger.info(f"Title: {self.driver.driver.title}")
         except Exception as e:
             logger.error(f"Ошибка в run(): {e}")
