@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QMessageBox
 )
 from robots.registry import REGISTRY
-from common.utils import check_ncalayer_running
+from operators.robots.robot_knp.utils import check_ncalayer_running
 from common.logger import get_logger
 from gui.components.run_button import RunButton
 
