@@ -52,21 +52,17 @@ def extract_password_from_folder_name(folder_name: str) -> str:
     :return: Извлеченный пароль.
     """
     try:
-        logger.info(
-            f"[PROCESS] Извлечение пароля из имени папки: {folder_name}")
+        logger.info(f"[PROCESS] Извлечение пароля из имени папки: {folder_name}")
 
         parts = folder_name.strip().split()
         if not parts:
-            raise ValueError(
-                f"Папка '{folder_name}' имеет некорректный формат (пустое имя).")
+            logger.error(f"[ERROR] Папка '{folder_name}' имеет некорректный формат (пустое имя).")
+            return None
 
         password = parts[-1]
         logger.info(f"[EXTRACTED] Извлечен пароль: {password}")
         return password
-    except ValueError as vErr:
-        logger.error(
-            f"[ERROR] Некорректное имя папки: {folder_name}. Ошибка: {vErr}")
-    except Exception as Err:
-        logger.error(
-            f"[ERROR] Ошибка при извлечении пароля из имени папки '{folder_name}': {Err}")
-        raise
+
+    except Exception as err:
+        logger.error(f"[ERROR] Ошибка при извлечении пароля из имени папки '{folder_name}': {err}")
+        return None

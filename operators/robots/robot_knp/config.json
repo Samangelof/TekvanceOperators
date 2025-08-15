@@ -47,5 +47,5 @@
         "excludeSwitches": ["enable-automation"],
         "useAutomationExtension": false
     },
-    "eds_folder": "path/to/eds/folder"
+    "eds_folder": "path\\to\\eds\\folder"
 }
