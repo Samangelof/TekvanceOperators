@@ -1,14 +1,13 @@
 import time
 import os
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
 from operators.common.selenium_actions import SeleniumActions
 from common.logger import get_logger
 from robots.base.base import BaseRobot
-from robots.robot_knp.utils import find_eds_file, extract_password_from_folder_name
+from robots.robot_knp.utils import find_eds_file, extract_password_from_folder_name, process_all_certs
+
 
 logger = get_logger("core_knp")
 
@@ -48,9 +47,13 @@ class BaseSeleniumRobot(BaseRobot):
         self.actions.wait_and_click(
             By.CSS_SELECTOR, ".enter-by-cert-button", desc="кнопку 'Войти по ЭЦП'")
 
+    def process_all_certs(self):
+        base_folder = self.config.get("eds_folder", "")
+        process_all_certs(base_folder, self.select_cert_from_dir, self.logout)
+
+
     def select_cert_from_dir(self, folder_path: str):
         """Выбрать ЭЦП из указанной папки."""
-        from selenium.webdriver.common.by import By
 
         logger.info(f"[CERT] Работаем с папкой: {folder_path}")
         folder_name = os.path.basename(folder_path)
@@ -61,6 +64,9 @@ class BaseSeleniumRobot(BaseRobot):
             return False
 
         password = extract_password_from_folder_name(folder_name)
+        if not password:
+            logger.warning(f"[CERT] Пароль не найден, пропуск: {folder_path}")
+            return False
 
         self.actions.wait_for_presence(By.CSS_SELECTOR, ".modal-dialog", desc="модальное окно")
 
@@ -88,10 +94,16 @@ class BaseSeleniumRobot(BaseRobot):
             
         pwd_input.clear()
         pwd_input.send_keys(password)
-        logger.debug(f"[CERT] Введён пароль: {password[:2]}***")
+        logger.debug(f"[CERT] Введeн пароль: {password[:2]}***")
+
+        self.actions.wait_for_presence(
+            By.XPATH, "//button[contains(text(), 'Ok') and not(@disabled)]",
+            desc="активная кнопка 'Ok'"
+        )
 
         self.actions.wait_and_click(
-            By.XPATH, "//button[contains(text(), 'Ok') and not(@disabled)]", desc="кнопка 'Ok'"
+            By.XPATH, "//button[contains(text(), 'Ok') and not(@disabled)]",
+            desc="кнопка 'Ok'"
         )
 
         alert = self.actions.wait_for_presence(
@@ -101,7 +113,7 @@ class BaseSeleniumRobot(BaseRobot):
         if alert:
             text = alert.text.strip()
             if "Срок действия Вашего сертификата" in text:
-                logger.warning(f"[CERT] Сертификат истёк: {folder_path}")
+                logger.warning(f"[CERT] Сертификат истек: {folder_path}")
                 return False
             if "Введите верный пароль" in text:
                 logger.warning(f"[CERT] Неверный пароль: {folder_path}")
@@ -112,9 +124,12 @@ class BaseSeleniumRobot(BaseRobot):
         )
 
         logger.info(f"[CERT] Успешно выбран сертификат: {folder_path}")
-        time.sleep(10)
         return True
 
+    def logout(self):
+        self.actions.wait_and_click(
+            By.XPATH, "//a[@title='Выход']", desc="кнопка 'Выход'"
+        )
 
 
     #* --
