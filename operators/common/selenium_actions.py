@@ -6,6 +6,7 @@ from selenium.common.exceptions import (
     ElementClickInterceptedException,
     TimeoutException,
     WebDriverException,
+    StaleElementReferenceException
 )
 from common.logger import get_logger
 
@@ -18,37 +19,48 @@ class SeleniumActions:
         self.config = config
         self.timeout = 60
 
-    def wait_and_click(self, by: By, value: str, desc: str = None, wait_for_visibility: bool = False):
+    def wait_and_click(self, by: By, value: str, desc: str = None, wait_for_visibility: bool = False, retries: int = 2):
         """
-        Клик по элементу с ожиданием и обработкой исключений.
-
-        :param by: Тип локатора (например, By.CSS_SELECTOR, By.XPATH).
-        :param value: Селектор.
-        :param desc: Описание для логов.
-        :param wait_for_visibility: True — ожидать видимость, False — кликабельность.
+        Клик по элементу с ожиданием, с защитой от stale element.
         """
-        try:
-            logger.info(f"Ожидание элемента: {desc or value}")
-            wait = WebDriverWait(self.driver, self.timeout)
+        attempt = 0
+        while attempt <= retries:
+            try:
+                logger.info(f"Ожидание элемента: {desc or value}")
+                wait = WebDriverWait(self.driver, self.timeout)
 
-            if wait_for_visibility:
-                element = wait.until(EC.visibility_of_element_located((by, value)))
-            else:
-                element = wait.until(EC.element_to_be_clickable((by, value)))
+                if wait_for_visibility:
+                    element = wait.until(EC.visibility_of_element_located((by, value)))
+                else:
+                    element = wait.until(EC.element_to_be_clickable((by, value)))
 
-            logger.info(f"Клик по элементу: {desc or value}")
-            element.click()
+                logger.info(f"Клик по элементу: {desc or value}")
+                element.click()
+                return  # успех — выходим
 
-        except NoSuchElementException:
-            logger.error(f"Элемент '{desc or value}' не найден.")
-        except ElementClickInterceptedException:
-            logger.error(f"Клик по элементу '{desc or value}' перехвачен.")
-        except TimeoutException:
-            logger.error(f"Тайм-аут при ожидании элемента '{desc or value}'.")
-        except WebDriverException as e:
-            logger.error(f"WebDriver ошибка при клике '{desc or value}': {str(e)}")
-        except Exception as e:
-            logger.error(f"Неизвестная ошибка при клике '{desc or value}': {str(e)}", exc_info=True)
+            except StaleElementReferenceException:
+                attempt += 1
+                logger.warning(f"[STALE] Элемент {desc or value} устарел, повтор {attempt}/{retries}")
+                if attempt > retries:
+                    logger.error(f"[STALE] Не удалось кликнуть по {desc or value} после {retries} попыток.")
+                    return
+                continue
+
+            except NoSuchElementException:
+                logger.error(f"Элемент '{desc or value}' не найден.")
+                return
+            except ElementClickInterceptedException:
+                logger.error(f"Клик по элементу '{desc or value}' перехвачен.")
+                return
+            except TimeoutException:
+                logger.error(f"Тайм-аут при ожидании элемента '{desc or value}'.")
+                return
+            except WebDriverException as e:
+                logger.error(f"WebDriver ошибка при клике '{desc or value}': {str(e)}")
+                return
+            except Exception as e:
+                logger.error(f"Неизвестная ошибка при клике '{desc or value}': {str(e)}", exc_info=True)
+                return
 
     def wait_for_presence(self, by: By, selector: str, desc: str = "элемент", timeout: int = 60, raise_on_timeout: bool = True):
         try:
