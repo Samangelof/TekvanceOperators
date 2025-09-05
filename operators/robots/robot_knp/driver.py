@@ -2,16 +2,12 @@ import os
 import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-
-from robots.robot_knp.core import BaseSeleniumRobot
+from robots.robot_knp.core import KnpBehavior
 
 
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
-print(f"[DEBUG] loading config from: {CONFIG_PATH}")
 
-class RobotKnpDriver(BaseSeleniumRobot):
+class KnpDriver(KnpBehavior):
     def __init__(self, config=None, *args, **kwargs):
         if config is None:
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
@@ -117,4 +113,11 @@ class RobotKnpDriver(BaseSeleniumRobot):
 
     
     def _init_driver(self):
-        return webdriver.Chrome(options=self.config["chrome_options"])
+        options = self.config["chrome_options"]
+        options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+
+        driver = webdriver.Chrome(options=options)
+        driver.execute_cdp_cmd("Network.enable", {})
+        driver.execute_cdp_cmd("Page.enable", {})
+        return driver
+

@@ -1,4 +1,3 @@
-import time
 import os
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
@@ -6,13 +5,13 @@ from selenium.webdriver.common.by import By
 from operators.common.selenium_actions import SeleniumActions
 from common.logger import get_logger
 from robots.base.base import BaseRobot
-from robots.robot_knp.utils import find_eds_file, extract_password_from_folder_name, process_all_certs
+from robots.robot_knp.utils import find_eds_file, extract_password_from_folder_name
 
 
 logger = get_logger("core_knp")
 
 
-class BaseSeleniumRobot(BaseRobot):
+class KnpBehavior(BaseRobot):
     def __init__(self, config: dict | None = None):
         super().__init__(config)
         self.config = config or {}
@@ -47,15 +46,13 @@ class BaseSeleniumRobot(BaseRobot):
         self.actions.wait_and_click(
             By.CSS_SELECTOR, ".enter-by-cert-button", desc="кнопку 'Войти по ЭЦП'")
 
-    def process_all_certs(self):
-        base_folder = self.config.get("eds_folder", "")
-        process_all_certs(base_folder, self.select_cert_from_dir, self.logout)
-
-
     def select_cert_from_dir(self, folder_path: str):
         """Выбрать ЭЦП из указанной папки."""
 
         logger.info(f"[CERT] Работаем с папкой: {folder_path}")
+
+        self.login_by_cert()
+        
         folder_name = os.path.basename(folder_path)
 
         eds_file = find_eds_file(folder_path)
@@ -123,6 +120,18 @@ class BaseSeleniumRobot(BaseRobot):
             By.XPATH, "//button[contains(text(), 'Выбрать')]", desc="кнопка 'Выбрать'"
         )
 
+        #! Заделка на будущее для треккинга запросов и ответов для ловли ошибок со стороны веб ресурса
+        # for entry in self.driver.get_log("performance"):
+        #     msg = json.loads(entry["message"])
+        #     method = msg.get("message", {}).get("method")
+        #     if method == "Network.requestWillBeSent":
+        #         url = msg["message"]["params"]["request"]["url"]
+        #         logger.success(f"REQ: {url}")
+        #     elif method == "Network.responseReceived":
+        #         resp = msg["message"]["params"]["response"]
+        #         logger.success(f"RESP: {resp['status']} {resp['url']}")
+
+
         logger.info(f"[CERT] Успешно выбран сертификат: {folder_path}")
         return True
 
@@ -130,7 +139,6 @@ class BaseSeleniumRobot(BaseRobot):
         self.actions.wait_and_click(
             By.XPATH, "//a[@title='Выход']", desc="кнопка 'Выход'"
         )
-
 
     #* --
     def close(self):

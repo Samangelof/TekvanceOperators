@@ -1,17 +1,17 @@
 import os
 import time
 from common.logger import get_logger
-from operators.robots.robot_knp.driver import RobotKnpDriver
+from operators.robots.robot_knp.driver import KnpDriver
 
 
 logger = get_logger("robot_knp")
 
 
-class KnpRobot:
+class KnpController:
     def __init__(self, config: dict):
-        self.driver = RobotKnpDriver(config)
+        self.driver = KnpDriver(config)
     
-    def run(self):
+    def run(self): 
         try:
             self.driver.open_homepage()
             self.driver.wait_for_load()
