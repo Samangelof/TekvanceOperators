@@ -135,6 +135,164 @@ class KnpBehavior(BaseRobot):
         logger.info(f"[CERT] Успешно выбран сертификат: {folder_path}")
         return True
 
+    def open_account_page(self) -> bool:
+        """Открыть страницу лицевого счета (с авто-ретраем + JS-клик при фейле)"""
+        main_xpath = "//div[contains(@class, 'iceMnuBarItem')]//span[normalize-space()='Лицевой счет']"
+        sub_xpath = "//div[contains(@class, 'subMenu')]//a[@href='/knp/p_accounts/card/']"
+
+        for attempt in (1, 2):
+            try:
+                main_item = self.actions.wait_for_presence(
+                    By.XPATH, main_xpath,
+                    desc="пункт меню 'Лицевой счет'",
+                    timeout=10
+                )
+                if not main_item:
+                    raise RuntimeError("верхний пункт меню не найден")
+                main_item.click()
+
+                account_link = self.actions.wait_for_presence(
+                    By.XPATH, sub_xpath,
+                    desc="ссылка 'Лицевой счет'",
+                    timeout=10
+                )
+                if not account_link:
+                    raise RuntimeError("ссылка не найдена")
+
+                try:
+                    account_link.click()
+                except Exception:
+                    logger.warning("[NAV] Обычный клик не сработал, пробуем JS-клик")
+                    self.driver.execute_script("arguments[0].click();", account_link)
+
+                self.wait_for_load()
+                logger.info(f"[NAV] Перешли на страницу лицевого счета (попытка {attempt})")
+                return True
+
+            except Exception as e:
+                logger.warning(f"[NAV] Ошибка при переходе на лицевой счет (попытка {attempt}): {e}")
+                self.driver.refresh()
+                self.wait_for_load()
+
+        logger.error("[NAV] Не удалось открыть страницу лицевого счета")
+        return False
+
+    def request_account_balance(self) -> bool:
+        """Запросить сальдо лицевого счета"""
+        try:
+            self.actions.wait_and_click(
+                By.XPATH,
+                "//button[contains(text(), 'Запросить сальдо ЛС')]",
+                desc="кнопка 'Запросить сальдо ЛС'",
+                wait_for_visibility=True
+            )
+            self.wait_for_load()
+            logger.info("[BALANCE] Отправлен запрос на получение сальдо ЛС")
+            return True
+        except Exception as e:
+            logger.error(f"[BALANCE] Ошибка при запросе сальдо ЛС: {e}")
+            return False
+
+    def check_table_and_screenshot_negatives(self, save_dir: str = "screens") -> list[str]:
+        """
+        Проверить таблицу сальдо и сохранить скриншоты строк с отрицательными значениями.
+        Возвращает список путей к сохранённым скринам.
+        """
+        os.makedirs(save_dir, exist_ok=True)
+        saved: list[str] = []
+
+        try:
+            table = self.actions.wait_for_presence(
+                By.ID, "dataTable", desc="таблица сальдо", timeout=5, raise_on_timeout=False
+            )
+            if not table:
+                logger.info("[TABLE] Таблица сальдо отсутствует, пропуск")
+                return saved
+
+            self.driver.execute_script("arguments[0].scrollIntoView(true);", table)
+
+            rows = table.find_elements(By.CSS_SELECTOR, "tbody tr")
+            if not rows:
+                logger.info("[TABLE] В таблице нет строк, пропуск")
+                return saved
+
+            for idx, row in enumerate(rows, start=1):
+                negatives = row.find_elements(By.CSS_SELECTOR, "span.text-red")
+                if negatives:
+                    path = os.path.join(save_dir, f"row_{idx}.png")
+                    row.screenshot(path)
+                    saved.append(path)
+                    logger.warning(
+                        f"[TABLE] Отрицательное значение в строке {idx}, скриншот: {path}"
+                    )
+
+        except Exception as e:
+            logger.error(f"[TABLE] Ошибка при проверке таблицы: {e}")
+
+        return saved
+
+    def open_notifications_page(self) -> bool:
+        """
+        Открыть страницу 'Уведомления / Извещения / Решения',
+        нажать 'Найти' и дождаться окончания загрузки (с авто-ретраем + JS-клик при фейле)
+        """
+        main_xpath = "//div[contains(@class, 'iceMnuBarItem')]//span[normalize-space()='Уведомления/ Извещения/ Решения']"
+        sub_xpath = "//div[contains(@class, 'subMenu')]//a[@href='/knp/notifications/registry/']"
+        find_btn_xpath = "//button[normalize-space()='Найти']"
+        loader_css = ".thin-loader"
+
+        for attempt in (1, 2):
+            try:
+                main_item = self.actions.wait_for_presence(
+                    By.XPATH, main_xpath,
+                    desc="пункт меню 'Уведомления/ Извещения/ Решения'",
+                    timeout=10
+                )
+                if not main_item:
+                    raise RuntimeError("верхний пункт меню не найден")
+                main_item.click()
+
+                notif_link = self.actions.wait_for_presence(
+                    By.XPATH, sub_xpath,
+                    desc="ссылка 'Уведомления / Извещения / Решения'",
+                    timeout=10
+                )
+                if not notif_link:
+                    raise RuntimeError("ссылка не найдена")
+
+                try:
+                    notif_link.click()
+                except Exception:
+                    logger.warning("[NAV] Обычный клик не сработал, пробуем JS-клик")
+                    self.driver.execute_script("arguments[0].click();", notif_link)
+
+                self.wait_for_load()
+
+                self.actions.wait_and_click(
+                    By.XPATH, find_btn_xpath,
+                    desc="кнопка 'Найти'",
+                    wait_for_visibility=True
+                )
+
+                #! Костыль. УБРАТЬ!
+                from selenium.webdriver.support.ui import WebDriverWait
+                WebDriverWait(self.driver, 20).until_not(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, loader_css))
+                )
+
+                self.wait_for_load()
+                logger.info(f"[NAV] Перешли на уведомления, нажали 'Найти' и дождались загрузки (попытка {attempt})")
+                return True
+
+            except Exception as e:
+                logger.warning(f"[NAV] Ошибка при переходе/поиске на уведомлениях (попытка {attempt}): {e}")
+                self.driver.refresh()
+                self.wait_for_load()
+
+        logger.error("[NAV] Не удалось открыть уведомления и нажать 'Найти'")
+        return False
+
+
     def logout(self):
         self.actions.wait_and_click(
             By.XPATH, "//a[@title='Выход']", desc="кнопка 'Выход'"
