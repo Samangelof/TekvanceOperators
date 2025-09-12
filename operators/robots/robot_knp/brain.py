@@ -41,14 +41,13 @@ class KnpController:
     
     def process_session_workflow(self, cert_path: str):
         """Шаги сценария между входом и выходом."""
-        logger.info(f"[SESSION] Старт задач для {cert_path}")
-        time.sleep(2)
-        logger.info(f"[SESSION] Сделано 1/2 действие для {cert_path}")
-        time.sleep(2)
-        logger.info(f"[SESSION] Сделано 2/2 действие для {cert_path}")
+        self.driver.open_account_page()
+        self.driver.request_account_balance()
+        # time.sleep(120)
+        self.driver.check_table_and_screenshot_negatives()
+        self.driver.open_notifications_page()
 
-
-
+        
     def close(self):
         if getattr(self.driver, "driver", None):
             self.driver.driver.quit()
